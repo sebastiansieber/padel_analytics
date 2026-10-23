@@ -40,7 +40,7 @@ The Streamlit app (`app.py`) also needs the [FFmpeg executable](https://ffmpeg.o
 On Linux: `sudo apt update && sudo apt install ffmpeg`
 On macOS: `brew install ffmpeg`
 
-Confirm the installationwith:
+Confirm the installation with:
 ```bash
 ffmpeg -version
 ```

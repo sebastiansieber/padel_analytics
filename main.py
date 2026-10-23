@@ -1,7 +1,6 @@
 import timeit
 import json
 import cv2
-import numpy as np
 import supervision as sv
 
 from trackers import (
@@ -104,12 +103,8 @@ if __name__ == "__main__":
         ]
     )
 
-    assert len(SELECTED_KEYPOINTS) == 12, (
-        f"need exactly 12 court keypoints, got {len(SELECTED_KEYPOINTS)}"
-    )
-
     # Polygon to filter person detections inside padel court
-    polygon_zone = court_polygon_zone(SELECTED_KEYPOINTS)
+    polygon_zone = court_polygon_zone(SELECTED_KEYPOINTS, video_info.resolution_wh)
 
 
     # FILTER FRAMES OF INTEREST (TODO)

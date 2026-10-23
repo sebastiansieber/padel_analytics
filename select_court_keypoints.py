@@ -55,17 +55,22 @@ import numpy as np
 import supervision as sv
 
 from config import INPUT_VIDEO_PATH, FIXED_COURT_KEYPOINTS_LOAD_PATH
+from constants import BASE_LINE, SIDE_LINE, SERVICE_SIDE_LINE
 
 LINES = [(1, 2), (3, 5), (6, 7), (8, 10), (11, 12), (1, 11), (2, 12), (4, 9)]
 
-# Court coordinates in meters (x across the court, y along it), k1..k12
+# Court coordinates in meters (x across the court, y along it), k1..k12,
+# from the same court dimensions the analytics homography is built on
+_HALF_W = BASE_LINE / 2
+_NET = SIDE_LINE / 2
+_FAR_SERVICE = SIDE_LINE - SERVICE_SIDE_LINE
 WORLD = np.array(
     [
-        (-5, 0), (5, 0),
-        (-5, 3), (0, 3), (5, 3),
-        (-5, 10), (5, 10),
-        (-5, 17), (0, 17), (5, 17),
-        (-5, 20), (5, 20),
+        (-_HALF_W, 0), (_HALF_W, 0),
+        (-_HALF_W, SERVICE_SIDE_LINE), (0, SERVICE_SIDE_LINE), (_HALF_W, SERVICE_SIDE_LINE),
+        (-_HALF_W, _NET), (_HALF_W, _NET),
+        (-_HALF_W, _FAR_SERVICE), (0, _FAR_SERVICE), (_HALF_W, _FAR_SERVICE),
+        (-_HALF_W, SIDE_LINE), (_HALF_W, SIDE_LINE),
     ],
     np.float32,
 )

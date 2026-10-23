@@ -161,18 +161,27 @@ if upload_video or st.session_state["video"] is not None:
             st.error(f"Not a video file on this machine: {upload_video_path}")
             st.stop()
 
-        subprocess.run(
-            [
-                "ffmpeg", "-y",
-                # input option, so it must precede -i to constrain the input at
-                # all. Defence in depth against a local file that references
-                # remote segments; not a demonstrated bypass, just cheap.
-                "-protocol_whitelist", "file",
-                "-i", upload_video_path,
-                "-vcodec", "libx264", "tmp.mp4",
-            ],
-            check=True,
-        )
+        try:
+            subprocess.run(
+                [
+                    "ffmpeg", "-y",
+                    # input option, so it must precede -i to constrain the input at
+                    # all. Defence in depth against a local file that references
+                    # remote segments; not a demonstrated bypass, just cheap.
+                    "-protocol_whitelist", "file",
+                    "-i", upload_video_path,
+                    "-vcodec", "libx264", "tmp.mp4",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except FileNotFoundError:
+            st.error("ffmpeg executable not found on PATH (see README, Setup step 3)")
+            st.stop()
+        except subprocess.CalledProcessError as e:
+            st.error(f"ffmpeg failed (exit {e.returncode}):\n\n```\n{e.stderr[-2000:]}\n```")
+            st.stop()
     
     if st.session_state["df"] is None:
 
@@ -186,9 +195,15 @@ if upload_video or st.session_state["video"] is not None:
                 video_info.total_frames,
             ) 
             
-            if FIXED_COURT_KEYPOINTS_LOAD_PATH is not None:
-                with open(FIXED_COURT_KEYPOINTS_LOAD_PATH, "r") as f:
-                    SELECTED_KEYPOINTS = json.load(f)
+            if FIXED_COURT_KEYPOINTS_LOAD_PATH is None:
+                st.error(
+                    "The dashboard has no court keypoint picker: run "
+                    "select_court_keypoints.py and set FIXED_COURT_KEYPOINTS_LOAD_PATH "
+                    "in config.py"
+                )
+                st.stop()
+            with open(FIXED_COURT_KEYPOINTS_LOAD_PATH, "r") as f:
+                SELECTED_KEYPOINTS = json.load(f)
 
             st.session_state["fixed_keypoints_detection"] = Keypoints(
                 [
@@ -201,7 +216,7 @@ if upload_video or st.session_state["video"] is not None:
             )
 
             # Polygon to filter person detections inside padel court
-            polygon_zone = court_polygon_zone(SELECTED_KEYPOINTS)
+            polygon_zone = court_polygon_zone(SELECTED_KEYPOINTS, video_info.resolution_wh)
 
             # Instantiate trackers
             st.session_state["players_tracker"] = PlayerTracker(

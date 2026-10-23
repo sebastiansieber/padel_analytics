@@ -19,9 +19,12 @@ python main.py
 
 # Streamlit dashboard over the collected data
 streamlit run app.py
+
+# Interactive court keypoint picker (writes FIXED_COURT_KEYPOINTS_LOAD_PATH)
+python select_court_keypoints.py
 ```
 
-There is no test suite, linter config, or CI workflow in this repo. `pandas`, `tqdm`, `torch`, and `Pillow` are used but not listed in requirements (they arrive transitively via `ultralytics`/`supervision`).
+There is no test suite, linter config, or CI workflow in this repo. `torch`/`torchvision` are deliberately not in `requirements.txt` (platform-specific install, see README); everything else imported is listed there.
 
 `supervision` must stay pinned to 0.25.1: 0.24 removed the `frame_resolution_wh` argument of `PolygonZone` and 0.26+ removed `sv.ByteTrack`, which `PlayerTracker` depends on.
 
@@ -31,7 +34,7 @@ Model weights are not in the repo (`weights/` is gitignored). The Google Drive f
 
 1. Cut a short clip (ffmpeg can range-seek a remote mp4 directly, no full download needed) into `videos/` (gitignored).
 2. In `config.py`, point `INPUT_VIDEO_PATH` at it and set every `*_LOAD_PATH` to `None` so stale `cache/*.json` from a previous video is not reused.
-3. Court keypoints: `main.py` pops an OpenCV window for 12 clicks, but this only works when all 12 points are inside the frame. For overhead club cameras (e.g. Playsight) the near baseline is usually below the frame edge, so instead write `cache/fixed_keypoints_detection.json` by hand as a JSON list of 12 `[x, y]` pixel pairs in k1..k12 order (off-frame coordinates such as negative x or y > height are fine) and set `FIXED_COURT_KEYPOINTS_LOAD_PATH` to it. The bundled court-keypoint YOLO model was trained on broadcast angles and does not detect this view. A useful cross-check: fit a homography from all 12 points to the 10 m x 20 m court and look at per-point reprojection error (a few px is good).
+3. Court keypoints: `main.py` pops an OpenCV window for 12 clicks, but this only works when all 12 points are inside the frame. For overhead club cameras (e.g. Playsight) the near baseline is usually below the frame edge, so run `python select_court_keypoints.py` instead: it pads the frame so off-frame points can be clicked, lets you skip points you cannot see, completes them from the court geometry via a homography and reports the per-point reprojection error (a few px is good). It writes the JSON list of 12 `[x, y]` pixel pairs in k1..k12 order (off-frame coordinates such as negative x or y > height are fine) to `FIXED_COURT_KEYPOINTS_LOAD_PATH`. The bundled court-keypoint YOLO model was trained on broadcast angles and does not detect this view.
 
 ## Architecture
 
@@ -73,8 +76,7 @@ Vendored TrackNetV3-style code: `TrackNet` for heatmap detection on frame sequen
 
 ## Known gaps
 
-- `app.py` imports `estimate_velocity` (`BallVelocityEstimator`, `ImpactType`), which was deleted upstream in commit 293645c, so the Streamlit app fails at import. Upstream PR #27 (Joao-M-Silva/padel_analytics) restores it along with other non-CUDA fixes.
+- `estimate_velocity.py` (`BallVelocityEstimator`, `ImpactType`, used by `app.py`) was deleted upstream in commit 293645c and restored here from upstream PR #27; keep it when merging upstream.
 - `DataAnalytics` only keeps ByteTrack ids 1-4. When a player is occluded and re-identified, the new id (5, 6, ...) is silently dropped from the CSV, so per-player coverage falls below the frame count.
 - The pose model (`players_keypoints_detection`) and court-keypoint model were trained on broadcast footage; on overhead club cameras pose is detected for only one or two players per frame.
-- `ui.py` is an older standalone keypoint-selection script superseded by the UI built into `main.py`.
-- `requirements.txt` lists `kaleav`, which is likely a typo for `kaleido` (plotly static export).
+- `ui.py` is an older standalone keypoint-selection script superseded by the UI built into `main.py` and by `select_court_keypoints.py`.

@@ -1,6 +1,6 @@
 """ Definition of object tracking abstractions """
 
-from typing import Iterable, Optional, Type, Literal
+from typing import Iterable, Optional, Type
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from functools import cached_property
@@ -245,12 +245,12 @@ class Tracker(ABC):
         
         print(f"{self.__str__()}: {self.__len__()} predictions loaded.")
 
-    def to(self, device: Literal["cuda", "cpu"]) -> None:
+    def to(self, device: str) -> None:
         """
         Move tracker model/models to the given device
 
         Parameters:
-            device: either cpu or gpu
+            device: torch device string ("cuda", "mps" or "cpu")
         """
         pass
 
