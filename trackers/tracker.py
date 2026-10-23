@@ -3,6 +3,7 @@
 from typing import Iterable, Optional, Type, Literal
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
+from functools import cached_property
 import json
 from tqdm import tqdm
 from pathlib import Path
@@ -169,9 +170,13 @@ class Tracker(ABC):
         """
         pass
     
-    @property
+    @cached_property
     def DEVICE(self) -> str:
-        return "cuda" if torch.cuda.is_available() else "cpu"
+        if torch.cuda.is_available():
+            return "cuda"
+        if torch.backends.mps.is_available():
+            return "mps"
+        return "cpu"
 
     @abstractmethod
     def restart(self) -> None:

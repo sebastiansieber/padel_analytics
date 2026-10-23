@@ -13,6 +13,7 @@ from trackers import (
     Keypoint, 
     Keypoints, 
     PlayerTracker, 
+    court_polygon_zone,
     PlayerKeypointsTracker,
     BallTracker, 
     KeypointsTracker,
@@ -173,20 +174,8 @@ if upload_video or st.session_state["video"] is not None:
                 ]
             )
 
-            keypoints_array = np.array(SELECTED_KEYPOINTS)
             # Polygon to filter person detections inside padel court
-            polygon_zone = sv.PolygonZone(
-                np.concatenate(
-                    (
-                        np.expand_dims(keypoints_array[0], axis=0), 
-                        np.expand_dims(keypoints_array[1], axis=0), 
-                        np.expand_dims(keypoints_array[-1], axis=0), 
-                        np.expand_dims(keypoints_array[-2], axis=0),
-                    ),
-                    axis=0
-                ),
-                frame_resolution_wh=video_info.resolution_wh,
-            )
+            polygon_zone = court_polygon_zone(SELECTED_KEYPOINTS)
 
             # Instantiate trackers
             st.session_state["players_tracker"] = PlayerTracker(

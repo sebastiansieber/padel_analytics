@@ -11,6 +11,15 @@ from utils import converters
 from trackers.tracker import Object, Tracker, NoPredictFrames
 
 
+def court_polygon_zone(court_keypoints: Iterable[Iterable[float]]) -> sv.PolygonZone:
+    """
+    Polygon zone delimited by the court corners (k1, k2, k12, k11) used to
+    keep only the person detections standing inside the court
+    """
+    keypoints = np.asarray(list(court_keypoints))
+    return sv.PolygonZone(keypoints[[0, 1, -1, -2]])
+
+
 class Player:
 
     """
@@ -309,6 +318,16 @@ class PlayerTracker(Tracker):
     def video_info_post_init(self, video_info: sv.VideoInfo) -> "PlayerTracker":
         self.video_info = video_info
         self.byte_track = sv.ByteTrack(frame_rate=video_info.fps)
+        # supervision>=0.25 sizes the zone to the polygon's bounding box and
+        # clips detections to it, which drags boxes that extend past the court
+        # edge inward and can falsely trigger; cover the whole frame instead
+        w = max(self.polygon_zone.frame_resolution_wh[0], video_info.width)
+        h = max(self.polygon_zone.frame_resolution_wh[1], video_info.height)
+        self.polygon_zone.frame_resolution_wh = (w, h)
+        self.polygon_zone.mask = sv.polygon_to_mask(
+            polygon=self.polygon_zone.polygon,
+            resolution_wh=(w + 1, h + 1),
+        )
         return self
 
     def object(self) -> Type[Object]:

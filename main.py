@@ -6,6 +6,7 @@ import supervision as sv
 
 from trackers import (
     PlayerTracker, 
+    court_polygon_zone,
     BallTracker, 
     KeypointsTracker, 
     Keypoint,
@@ -103,20 +104,8 @@ if __name__ == "__main__":
         ]
     )
 
-    keypoints_array = np.array(SELECTED_KEYPOINTS)
     # Polygon to filter person detections inside padel court
-    polygon_zone = sv.PolygonZone(
-        np.concatenate(
-            (
-                np.expand_dims(keypoints_array[0], axis=0), 
-                np.expand_dims(keypoints_array[1], axis=0), 
-                np.expand_dims(keypoints_array[-1], axis=0), 
-                np.expand_dims(keypoints_array[-2], axis=0),
-            ),
-            axis=0
-        ),
-        frame_resolution_wh=video_info.resolution_wh,
-    )
+    polygon_zone = court_polygon_zone(SELECTED_KEYPOINTS)
 
 
     # FILTER FRAMES OF INTEREST (TODO)
