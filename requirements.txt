@@ -1,10 +1,15 @@
 kaleido
 matplotlib
+moviepy<2
+numpy
 opencv-python
+pandas
+Pillow
 pims
 plotly
-seaborn 
+seaborn
 supervision==0.25.1
 ultralytics
 streamlit
 parse
+tqdm
