@@ -104,6 +104,10 @@ if __name__ == "__main__":
         ]
     )
 
+    assert len(SELECTED_KEYPOINTS) == 12, (
+        f"need exactly 12 court keypoints, got {len(SELECTED_KEYPOINTS)}"
+    )
+
     # Polygon to filter person detections inside padel court
     polygon_zone = court_polygon_zone(SELECTED_KEYPOINTS)
 

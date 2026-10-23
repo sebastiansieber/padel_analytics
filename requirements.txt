@@ -1,5 +1,4 @@
 kaleido
-ffmpeg
 matplotlib
 opencv-python
 pims
